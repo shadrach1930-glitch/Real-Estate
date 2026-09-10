@@ -1,5 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import uuid
+import time
 
 from app.config import settings
 from app.routes import health, chat, leads, conversations, followups, dashboard, webhooks
@@ -21,6 +24,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID", str(uuid.uuid4()))
+    start = time.perf_counter()
+
+    response = await call_next(request)
+
+    process_time = time.perf_counter() - start
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Process-Time"] = f"{process_time:.4f}"
+    return response
+
+
 # Routers
 app.include_router(health.router, tags=["Health"])
 app.include_router(chat.router, prefix="/api/v1", tags=["Chat"])
@@ -36,5 +53,6 @@ async def root():
     return {
         "service": "primehomes-api",
         "status": "ok",
+        "version": "0.1.0",
         "docs": "/docs",
     }
