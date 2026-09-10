@@ -1,157 +1,147 @@
-import { useState } from 'react'
+import { useChat } from '../hooks/useChat';
+import MessageBubble from '../components/chat/MessageBubble';
+import TypingIndicator from '../components/chat/TypingIndicator';
+import MessageInput from '../components/chat/MessageInput';
+import QuickActions from '../components/chat/QuickActions';
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState([
-    {
-      id: 'welcome',
-      sender: 'bot',
-      content: "Welcome to PrimeHomes Realty.\n\nI'm here to help you find the right property. You can tell me what you're looking for, your preferred location, budget, or whether you're buying or renting.",
-    },
-  ])
-  const [input, setInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const { messages, isLoading, error, send, retry, bottomRef } = useChat();
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return
-
-    const userMessage = {
-      id: Date.now().toString(),
-      sender: 'customer',
-      content: input.trim(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-
-    // Placeholder — will call POST /api/v1/chat in a later phase
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: (Date.now() + 1).toString(),
-          sender: 'bot',
-          content: "Thanks for your message. The full chat pipeline (FastAPI → n8n → AI) will be connected in the next development phases.",
-        },
-      ])
-      setIsLoading(false)
-    }, 800)
-  }
+  const showQuickActions = messages.length <= 1 && !isLoading;
 
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div>
-          <strong>PrimeHomes Realty</strong>
-          <div style={styles.subtitle}>AI Property Assistant</div>
-        </div>
-      </header>
+    <div style={styles.page}>
+      <div style={styles.container}>
+        {/* Header */}
+        <header style={styles.header}>
+          <div>
+            <div style={styles.brand}>PrimeHomes Realty</div>
+            <div style={styles.subtitle}>AI Property Assistant</div>
+          </div>
+          <div style={styles.statusDot} title="Online" />
+        </header>
 
-      <main style={styles.messages}>
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            style={{
-              ...styles.bubble,
-              ...(msg.sender === 'customer' ? styles.customer : styles.bot),
-            }}
-          >
-            {msg.content}
-          </div>
-        ))}
-        {isLoading && (
-          <div style={{ ...styles.bubble, ...styles.bot }}>
-            <em>Assistant is typing…</em>
-          </div>
+        {/* Messages */}
+        <main style={styles.messages}>
+          {messages.map((msg) => (
+            <MessageBubble key={msg.id} message={msg} />
+          ))}
+
+          {isLoading && <TypingIndicator />}
+
+          {error && (
+            <div style={styles.errorBox}>
+              <p style={styles.errorText}>{error}</p>
+              <div style={styles.errorActions}>
+                <button style={styles.errorBtn} onClick={retry}>
+                  Dismiss
+                </button>
+                <button
+                  style={{ ...styles.errorBtn, ...styles.errorBtnPrimary }}
+                  onClick={() => send('I want to speak with an agent')}
+                >
+                  Speak to an Agent
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div ref={bottomRef} />
+        </main>
+
+        {/* Quick actions (only at start) */}
+        {showQuickActions && (
+          <QuickActions onSelect={send} disabled={isLoading} />
         )}
-      </main>
 
-      <footer style={styles.inputArea}>
-        <input
-          style={styles.input}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Type your message…"
-          disabled={isLoading}
-        />
-        <button style={styles.sendBtn} onClick={handleSend} disabled={isLoading || !input.trim()}>
-          Send
-        </button>
-      </footer>
+        {/* Input */}
+        <MessageInput onSend={send} disabled={isLoading} />
+      </div>
+
+      {/* Keyframes for typing dots */}
+      <style>{`
+        @keyframes bounce {
+          0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+          40% { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
-  )
+  );
 }
 
 const styles = {
+  page: {
+    minHeight: '100vh',
+    background: '#e2e8f0',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'stretch',
+  },
   container: {
+    width: '100%',
     maxWidth: 640,
-    margin: '0 auto',
-    height: '100vh',
     display: 'flex',
     flexDirection: 'column',
     background: '#fff',
-    boxShadow: '0 0 24px rgba(0,0,0,0.08)',
+    boxShadow: '0 0 40px rgba(0,0,0,0.08)',
   },
   header: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid #e5e7eb',
     background: '#0f172a',
     color: '#fff',
   },
+  brand: {
+    fontWeight: 700,
+    fontSize: 17,
+  },
   subtitle: {
     fontSize: 13,
-    opacity: 0.8,
+    opacity: 0.75,
     marginTop: 2,
+  },
+  statusDot: {
+    width: 10,
+    height: 10,
+    borderRadius: '50%',
+    background: '#22c55e',
   },
   messages: {
     flex: 1,
     overflowY: 'auto',
-    padding: 20,
+    padding: '20px 16px',
     display: 'flex',
     flexDirection: 'column',
-    gap: 12,
   },
-  bubble: {
-    maxWidth: '80%',
-    padding: '12px 16px',
-    borderRadius: 16,
-    whiteSpace: 'pre-wrap',
-    fontSize: 15,
+  errorBox: {
+    background: '#fef2f2',
+    border: '1px solid #fecaca',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 10,
   },
-  customer: {
-    alignSelf: 'flex-end',
-    background: '#2563eb',
-    color: '#fff',
-    borderBottomRightRadius: 4,
+  errorText: {
+    color: '#b91c1c',
+    fontSize: 14,
+    marginBottom: 10,
   },
-  bot: {
-    alignSelf: 'flex-start',
-    background: '#f1f5f9',
-    color: '#1e293b',
-    borderBottomLeftRadius: 4,
-  },
-  inputArea: {
+  errorActions: {
     display: 'flex',
     gap: 8,
-    padding: 16,
-    borderTop: '1px solid #e5e7eb',
   },
-  input: {
-    flex: 1,
-    padding: '12px 16px',
-    borderRadius: 24,
+  errorBtn: {
+    padding: '6px 12px',
+    borderRadius: 8,
     border: '1px solid #d1d5db',
-    fontSize: 15,
-    outline: 'none',
-  },
-  sendBtn: {
-    padding: '12px 20px',
-    borderRadius: 24,
-    border: 'none',
-    background: '#2563eb',
-    color: '#fff',
-    fontWeight: 600,
+    background: '#fff',
+    fontSize: 13,
     cursor: 'pointer',
   },
-}
+  errorBtnPrimary: {
+    background: '#2563eb',
+    color: '#fff',
+    borderColor: '#2563eb',
+  },
+};

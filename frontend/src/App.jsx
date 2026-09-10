@@ -1,5 +1,5 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import ChatPage from './pages/ChatPage.jsx'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ChatPage from './pages/ChatPage.jsx';
 
 function App() {
   return (
@@ -14,7 +14,7 @@ function App() {
         */}
       </Routes>
     </BrowserRouter>
-  )
+  );
 }
 
-export default App
+export default App;
