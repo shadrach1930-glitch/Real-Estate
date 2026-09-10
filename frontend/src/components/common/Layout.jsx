@@ -1,14 +1,21 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const NAV = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/leads', label: 'Leads' },
   { to: '/follow-ups', label: 'Follow-ups' },
-  { to: '/', label: 'Customer Chat' },
 ];
 
 export default function Layout({ children, title }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <div style={styles.shell}>
@@ -36,6 +43,12 @@ export default function Layout({ children, title }) {
             );
           })}
         </nav>
+        <div style={styles.footer}>
+          {user && <div style={styles.userName}>{user.name || user.email}</div>}
+          <button style={styles.logoutBtn} onClick={handleLogout}>
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <div style={styles.main}>
@@ -81,6 +94,7 @@ const styles = {
     flexDirection: 'column',
     gap: 4,
     padding: '16px 12px',
+    flex: 1,
   },
   navItem: {
     padding: '10px 12px',
@@ -93,6 +107,25 @@ const styles = {
   navItemActive: {
     background: '#1e293b',
     color: '#fff',
+  },
+  footer: {
+    padding: '16px 20px',
+    borderTop: '1px solid #1e293b',
+  },
+  userName: {
+    fontSize: 13,
+    color: '#94a3b8',
+    marginBottom: 8,
+  },
+  logoutBtn: {
+    background: 'transparent',
+    border: '1px solid #334155',
+    color: '#94a3b8',
+    padding: '6px 12px',
+    borderRadius: 6,
+    fontSize: 12,
+    cursor: 'pointer',
+    width: '100%',
   },
   main: {
     flex: 1,

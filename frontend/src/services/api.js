@@ -1,8 +1,12 @@
 /**
- * Centralized API client.
+ * Centralized API client with auth support.
  */
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+
+function getToken() {
+  return localStorage.getItem('ph_token');
+}
 
 async function request(path, options = {}) {
   const url = `${API_BASE}${path}`;
@@ -14,10 +18,23 @@ async function request(path, options = {}) {
 
   headers['X-Request-ID'] = crypto.randomUUID?.() || String(Date.now());
 
+  const token = getToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   const response = await fetch(url, {
     ...options,
     headers,
   });
+
+  if (response.status === 401 && !path.includes('/auth/login')) {
+    localStorage.removeItem('ph_token');
+    localStorage.removeItem('ph_user');
+    if (!window.location.pathname.includes('/login')) {
+      window.location.href = '/login';
+    }
+  }
 
   if (!response.ok) {
     let message = 'Something went wrong. Please try again.';
@@ -33,6 +50,18 @@ async function request(path, options = {}) {
   }
 
   return response.json();
+}
+
+// ── Auth ──────────────────────────────────────────────
+export async function login(email, password) {
+  return request('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function getMe() {
+  return request('/api/v1/auth/me');
 }
 
 // ── Chat ──────────────────────────────────────────────

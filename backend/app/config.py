@@ -35,6 +35,15 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
 
+    # Sales portal user (MVP single-user auth)
+    sales_user_email: str = "sales@primehomes.ng"
+    sales_user_password: str = "changeme123"
+    sales_user_name: str = "Sales Manager"
+
+    # Google Sheets (optional)
+    google_sheets_credentials: str = ""
+    google_sheets_id: str = ""
+
     log_level: str = "INFO"
 
 
