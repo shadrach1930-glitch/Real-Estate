@@ -84,3 +84,22 @@ export async function qualifyLead(leadId) {
 export async function getLeadHistory(leadId) {
   return request(`/api/v1/leads/${leadId}/history`);
 }
+
+// ── Follow-ups ────────────────────────────────────────
+export async function getLeadFollowUps(leadId) {
+  return request(`/api/v1/leads/${leadId}/follow-ups`);
+}
+
+export async function createFollowUp(leadId, data) {
+  return request(`/api/v1/leads/${leadId}/follow-ups`, {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function updateFollowUp(followUpId, data) {
+  return request(`/api/v1/follow-ups/${followUpId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}

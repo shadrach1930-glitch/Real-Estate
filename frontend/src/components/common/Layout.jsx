@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 const NAV = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/leads', label: 'Leads' },
+  { to: '/follow-ups', label: 'Follow-ups' },
   { to: '/', label: 'Customer Chat' },
 ];
 
@@ -18,7 +19,8 @@ export default function Layout({ children, title }) {
         </div>
         <nav style={styles.nav}>
           {NAV.map((item) => {
-            const active = location.pathname === item.to ||
+            const active =
+              location.pathname === item.to ||
               (item.to !== '/' && location.pathname.startsWith(item.to));
             return (
               <Link
