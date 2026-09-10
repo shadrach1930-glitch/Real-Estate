@@ -2,73 +2,45 @@
 
 Python + FastAPI backend for the PrimeHomes Realty Lead Bot.
 
-## Responsibilities
+## Current Capabilities
 
-- REST API (`/api/v1/...`)
-- Request validation (Pydantic)
-- Business logic & lead scoring
-- PostgreSQL persistence (SQLAlchemy + Alembic)
-- Communication with n8n
-- AI service orchestration
+- Full database models + Alembic
+- REST API (chat, leads, conversations, follow-ups, dashboard)
+- Deterministic lead scoring
+- n8n webhook integration
+- **AI Lead Extraction** (Phase 6)
+  - Configurable provider/model
+  - Structured JSON schema validation
+  - Nigerian currency & property normalization
+  - Rule-based fallback when no AI key is set
 
-## Structure
+## AI Configuration
 
-```text
-backend/
-├── app/
-│   ├── main.py
-│   ├── config.py
-│   ├── database/
-│   │   └── connection.py
-│   ├── models/
-│   │   ├── enums.py
-│   │   ├── customer.py
-│   │   ├── lead.py
-│   │   ├── conversation.py
-│   │   └── __init__.py
-│   ├── schemas/
-│   ├── services/
-│   └── routes/
-├── alembic/
-├── alembic.ini
-├── requirements.txt
-└── README.md
+In `.env`:
+
+```env
+AI_PROVIDER=openai          # or google, etc.
+AI_MODEL=gpt-4o-mini
+AI_API_KEY=sk-...
+AI_TEMPERATURE=0.2
+AI_MAX_TOKENS=1000
 ```
 
-## Database Models (Phase 2)
-
-Implemented according to the Database Design specification:
-
-| Table                  | Purpose                          |
-|------------------------|----------------------------------|
-| `customers`            | Customer identity & contact      |
-| `leads`                | Sales opportunities              |
-| `property_requirements`| Property preferences             |
-| `conversations`        | Chat sessions                    |
-| `messages`             | Individual messages              |
-| `lead_qualifications`  | Scoring results                  |
-| `sales_reps`           | Sales team members               |
-| `lead_assignments`     | Assignment history               |
-| `lead_status_history`  | Status audit trail               |
-| `follow_ups`           | Follow-up tasks                  |
-| `ai_extractions`       | AI structured output audit       |
+When `AI_API_KEY` is empty the system uses a deterministic rule-based extractor so local development works without an API key.
 
 ## Local Development
 
 ```bash
-# Create virtual environment
 python -m venv .venv
 source .venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
 
-# Ensure PostgreSQL is running (docker compose up -d postgres)
-# Then create the first migration:
+# Postgres
+docker compose up -d postgres
+
 alembic revision --autogenerate -m "initial schema"
 alembic upgrade head
 
-# Start the API
 uvicorn app.main:app --reload --port 8000
 ```
 
